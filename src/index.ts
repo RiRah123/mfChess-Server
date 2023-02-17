@@ -1,27 +1,27 @@
+//* import third-party
+import 'dotenv/config'; //* less lines + a one-time import across modules
 import cors from 'cors';
 import express, { Express, Request, Response } from 'express';
-import db from './db';
 import morgan from 'morgan';
-import dotenv from 'dotenv'; 
 
-const app: Express = express()
+//* import local
+import db from './db';
 
-dotenv.config();
+//* server init
+const app: Express = express();
+db.connect();
 
-const port = process.env.PORT || 3002;
-
+//* configure middleware
 app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 
-
+//* index route
 app.get("/", (req: Request, res: Response) => {
     res.status(200).send("Root")
-})
+});
 
-app.listen(port, () => {
-    console.log(`listening ${port}`);
-  });
-  
-
-db.connect()
+//* start server
+app.listen(process.env.PORT, () => {
+  console.log(`listening ${process.env.PORT}`);
+});
