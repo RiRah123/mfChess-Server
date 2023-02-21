@@ -6,11 +6,13 @@ const UserModel = require('../models/Users');
 
 let router = express.Router();
 
+//* Login Route
 router.post("/", (req: Request, res: Response) => {
     const token = req.body.token;
     const decoded = jwt.decode(token);
     //console.log(decoded);
-  
+
+    //* Check if user is in DB, if not then create new.
     UserModel.find({userID:decoded.sub}, async (err: Error, result: Array<typeof UserModel>) => { 
       console.log(decoded)
       if (err) {
