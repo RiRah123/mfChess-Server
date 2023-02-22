@@ -6,6 +6,7 @@
   "author": "r4c3 <63271957+r4c3@users.noreply.github.com>",
   "license": "MIT",
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.1",
     "@types/morgan": "^1.9.4",
     "@types/node": "^18.11.18",
     "@types/ws": "^8.5.4",
