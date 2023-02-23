@@ -36,7 +36,6 @@ app.listen(process.env.PORT, () => {
 
 import jwt, { JwtPayload }  from "jsonwebtoken";
 import { pairGameRoom } from './utils/pairGameRoom';
-// import jwt_decode, { JwtPayload } from 'jwt-decode'
 
 export interface WSInfo {
   verified: boolean;
@@ -166,8 +165,7 @@ wss.on('connection', function connection(ws) {
           }
           break;
 
-        //* 
-        } else if (payload.name == "pairing") {
+        } else if (payload.name == "joinRoom") {
           if (wsInfo.get(ws)!.roomID != "") {
             console.log("Already in room")
             ws.send(JSON.stringify({
@@ -218,14 +216,6 @@ wss.on('connection', function connection(ws) {
             ws.send(byteString.toString())
           })
           break;
-      // case "joinRoom":
-      //   rooms.has()
     }
-    // console.log('received: %s', data);
-    // // ws.send('something');
   });
 });
-
-// wss.on('listening', () => {
-//   console.log(`WebSocket server listening on ws://localhost:${wss.address()}`);
-// });
