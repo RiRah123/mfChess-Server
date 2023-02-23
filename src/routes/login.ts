@@ -14,9 +14,8 @@ router.post("/", (req: Request, res: Response) => {
 
     //* Check if user is in DB, if not then create new.
     UserModel.find({userID:decoded.sub}, async (err: Error, result: Array<typeof UserModel>) => { 
-      console.log(decoded)
       if (err) {
-        res.json(err);
+        res.status(400).json(err);
       } else if (result.length == 0){
         const user = {
           userID: decoded.sub,
@@ -27,11 +26,23 @@ router.post("/", (req: Request, res: Response) => {
         };
         const newUser = new UserModel(user);
         await newUser.save();
-        res.json({sub:decoded.sub});
+        res.status(200).json({sub:decoded.sub});
       } else {
-        res.json({sub:decoded.sub});
+        res.status(200).json({sub:decoded.sub});
       }
     });
+});
+
+router.post('/userInfo', (req: Request, res: Response) => {
+  const userSub = req.body.sub;
+  //console.log(userSub);
+  UserModel.find({userID:userSub}, (err: Error, result: Array<typeof UserModel>) => { 
+    if (err) {
+      res.json(err);
+    } else {
+      res.json({result:result});
+    }
   });
+});
 
 export default router
