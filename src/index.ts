@@ -35,9 +35,9 @@ app.listen(process.env.PORT, () => {
 
 
 import jwt, { JwtPayload }  from "jsonwebtoken";
-// import jwt_decode, { JwtPayload } from 'jwt-decode'
+import { pairGameRoom } from './utils/pairGameRoom';
 
-interface WSInfo {
+export interface WSInfo {
   verified: boolean;
   userID: string;
   roomID: string;
@@ -54,16 +54,24 @@ const defaultWSInfo = () => {
 }
 
 const authRequestToken = JSON.stringify({
-  type: "authentication",
+  type: "status",
   payload: {
-    name: "request",
+    name: "authentication request",
     userID: "",
     data: "",
   }
 })
 
 const wss = new WebSocket.Server({ port: 4000 });
+
+// TODO Migrate to a better data structure for queue
+const queue: WebSocket[] = []
+
+// ! needs method to check if rooms are alive
 const rooms = new Map<string, WebSocket[]>();
+
+// ! needs method to check if the ws are alive
+// * (Solved) There can be duplicate of same user using different ws
 const wsInfo = new Map<WebSocket, WSInfo>();
 
 wss.on('connection', function connection(ws) {
@@ -74,78 +82,140 @@ wss.on('connection', function connection(ws) {
   ws.on('error', console.error);
 
   ws.on('message', (byteString) => {
+    //* Destructure message and check if ws is in wsInfo
     const {type, payload} = JSON.parse(byteString.toString());
-    // console.log(obj)
-    // switch data
+    if (!wsInfo.has(ws) || wsInfo.get(ws) == undefined) throw new Error("WebSocket Info is None");
+
     switch (type) {
-      case "authentication":
-        if (wsInfo.get(ws)?.verified) {
-          console.log("Repeated Authentication from", wsInfo.get(ws)?.name)
-          ws.send(JSON.stringify({
-            type: "authentication",
-            payload: {
-              name: "result",
-              userID: "",
-              data: "success",
-            }
-          }))
-          break;
-        }
-        console.log("Received auth")
-        try {
-          const decoded = jwt.decode(payload.data) as JwtPayload;
-          if (decoded != null) {
-            if (true) {
-              wsInfo.set(ws, {
-                verified: true,
-                userID: decoded.sub!,
-                roomID: "",
-                name: decoded.name,
-              })
-            }
+      case "upgrade status":
+        if (payload.name == "authentication") {
+          //* Repeated authentication request
+          if (wsInfo.get(ws)!.verified) {
+            console.log("Repeated Authentication from", wsInfo.get(ws)?.name)
+            ws.send(JSON.stringify({
+              type: "status",
+              payload: {
+                name: "status update",
+                userID: "",
+                data: "authenticated",
+              }
+            }))
+            break;
           }
-        } catch (error) {
-          throw new Error("Error in authentication")
-        }
-        if (wsInfo.get(ws)?.verified) {
-          console.log("Authentication Succeeded for", wsInfo.get(ws)?.name)
-          ws.send(JSON.stringify({
-            type: "authentication",
-            payload: {
-              name: "result",
-              userID: "",
-              data: "success",
+          
+          let isDuplicateUser = false;
+          //* Verify jwtCredential to check that client is real
+          try {
+            const decoded = jwt.decode(payload.data) as JwtPayload;
+            if (decoded != null) {
+
+              // * Check for duplicate users using different ws
+              wsInfo.forEach((value, key) => {
+                if (value.userID === decoded.sub!) {
+                  isDuplicateUser = true;
+                }
+              }) 
+              if (!isDuplicateUser) {
+                wsInfo.set(ws, {
+                  verified: true,
+                  userID: decoded.sub!,
+                  roomID: "",
+                  name: decoded.name,
+                })
+              } else {
+                console.log("Duplicate User!")
+              }
             }
-          }))
-        } else {
-          console.log("Authentication Failed")
-          ws.send(JSON.stringify({
-            type: "authentication",
-            payload: {
-              name: "result",
-              userID: "",
-              data: "retry",
-            }
-          }))
-        }
-        break;
-      case "chat":
-        if (!wsInfo.get(ws)?.verified) {
-          ws.send(authRequestToken)
+          } catch (error) {
+            console.log("Authentication Failed")
+          }
+
+          //* Send updated status to client
+          if (wsInfo.get(ws)?.verified) {
+            console.log("Authentication Succeeded for", wsInfo.get(ws)?.name)
+            ws.send(JSON.stringify({
+              type: "status",
+              payload: {
+                name: "status update",
+                userID: "",
+                data: "authenticated",
+              }
+            }))
+
+          // ! had weird bug that this keeps firing but can't reproduce
+          } else if (isDuplicateUser) {
+            ws.send(JSON.stringify({
+              type: "status",
+              payload: {
+                name: "status update",
+                userID: "",
+                data: "duplicate user",
+              }
+            }))
+          } else {
+            console.log("Authentication Failed")
+            ws.send(JSON.stringify({
+              type: "status",
+              payload: {
+                name: "status update",
+                userID: "",
+                data: "connected",
+              }
+            }))
+          }
           break;
+
+        } else if (payload.name == "joinRoom") {
+          if (wsInfo.get(ws)!.roomID != "") {
+            console.log("Already in room")
+            ws.send(JSON.stringify({
+              type: "status",
+              payload: {
+                name: "status update",
+                userID: "",
+                data: "paired",
+              }
+            }))
+          } else {
+            if (!queue.includes(ws)) queue.push(ws);
+            ws.send(JSON.stringify({
+              type: "status",
+              payload: {
+                name: "status update",
+                userID: "",
+                data: "in queue",
+              }
+            }))
+            pairGameRoom(queue, rooms, wsInfo)
+          }
+
         }
-        wss.clients.forEach((client) => {
-          client.send(byteString.toString())
-        });
-        break;
-      // case "joinRoom":
-      //   rooms.has()
+        case "chat":
+          if (!wsInfo.get(ws)?.verified) {
+            ws.send(authRequestToken)
+            break;
+          } else if (wsInfo.get(ws)?.roomID === "") {
+            console.error("Using chat while not paired")
+
+            // ? This is duplicate code
+            if (!queue.includes(ws)) queue.push(ws);
+            ws.send(JSON.stringify({
+              type: "status",
+              payload: {
+                name: "status update",
+                userID: "",
+                data: "in queue",
+              }
+            }))
+            pairGameRoom(queue, rooms, wsInfo)
+            break;
+          }
+          // ! fix the uncertainties in here (wsInfo.get(ws)?.roomID!)
+          const players = rooms.get(wsInfo.get(ws)?.roomID!);
+          players?.forEach((ws) => {
+            ws.send(byteString.toString())
+          })
+          break;
     }
-    // console.log('received: %s', data);
-    // // ws.send('something');
   });
 });
-
-// wss.on('listening', () => {
-//   console.log(`WebSocket server listening on ws://localhost:${wss.address()}`);
-// });
