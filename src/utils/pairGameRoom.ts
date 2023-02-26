@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { WSInfo } from '..';
+import { WSInfo } from '../webSocketServer';
 
 const roomIDLength = 6;
 
