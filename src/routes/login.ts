@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const UserModel = require('../models/Users');
+const {UserModel} = require('../models/Users');
 
 let router = express.Router();
 

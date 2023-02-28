@@ -1,19 +1,21 @@
-
 import { WebSocket } from 'ws';
 import jwt, { JwtPayload }  from "jsonwebtoken";
 import { pairGameRoom } from './utils/pairGameRoom';
+import { UserModel, UserType } from './models/Users';
+import { Document, Types } from 'mongoose';
+import { RoomModel, RoomType } from './models/Room';
 
 export interface WSInfo {
   verified: boolean;
-  userID: string;
+  user: UserType | undefined;
   roomID: string;
   name: string;
 }
 
-const defaultWSInfo = () => {
+const defaultWSInfo = (): WSInfo => {
   return {
     verified: false,
-    userID: "",
+    user: undefined,
     roomID: "",
     name: ""
   }
@@ -28,13 +30,18 @@ const authRequestToken = JSON.stringify({
   }
 })
 
+export interface RoomMapType {
+    players: WebSocket[],
+    roomMongoID: Types.ObjectId
+}
+
 // const wss = new WebSocket.Server({ port: 4000 });
 
 // TODO Migrate to a better data structure for queue
 const queue: WebSocket[] = []
 
 // ! needs method to check if rooms are alive
-const rooms = new Map<string, WebSocket[]>();
+const rooms = new Map<string, RoomMapType>();
 
 // ! needs method to check if the ws are alive
 // * (Solved) There can be duplicate of same user using different ws
@@ -47,7 +54,7 @@ const onConnection = (ws: WebSocket) => {
     console.log("Connection Made")
     ws.on('error', console.error);
   
-    ws.on('message', (byteString) => {
+    ws.on('message', async (byteString) => {
       //* Destructure message and check if ws is in wsInfo
       const {type, payload} = JSON.parse(byteString.toString());
       if (!wsInfo.has(ws) || wsInfo.get(ws) == undefined) throw new Error("WebSocket Info is None");
@@ -77,17 +84,19 @@ const onConnection = (ws: WebSocket) => {
   
                 // * Check for duplicate users using different ws
                 wsInfo.forEach((value, key) => {
-                  if (value.userID === decoded.sub!) {
+                  if (value.user && value.user.userID === decoded.sub!) {
                     isDuplicateUser = true;
                   }
                 }) 
                 if (!isDuplicateUser) {
-                  wsInfo.set(ws, {
-                    verified: true,
-                    userID: decoded.sub!,
-                    roomID: "",
-                    name: decoded.name,
-                  })
+                    const result: UserType | null = await UserModel.findOne({userID:decoded.sub});
+                    if (!result) throw new Error("Cannot find user.")
+                    wsInfo.set(ws, {
+                        verified: true,
+                        user: result,
+                        roomID: "",
+                        name: decoded.name,
+                    })
                 } else {
                   console.log("Duplicate User!")
                 }
@@ -156,7 +165,7 @@ const onConnection = (ws: WebSocket) => {
             }
   
           }
-          case "chat":
+        case "chat":
             if (!wsInfo.get(ws)?.verified) {
               ws.send(authRequestToken)
               break;
@@ -177,10 +186,21 @@ const onConnection = (ws: WebSocket) => {
               break;
             }
             // ! fix the uncertainties in here (wsInfo.get(ws)?.roomID!)
-            const players = rooms.get(wsInfo.get(ws)?.roomID!);
-            players?.forEach((ws) => {
+            const room = rooms.get(wsInfo.get(ws)?.roomID!);
+            room?.players.forEach((ws) => {
               ws.send(byteString.toString())
             })
+            RoomModel.updateOne(
+                { _id: room?.roomMongoID }, 
+                { $push: { messages: {
+                    sender: payload.name,
+                    userID: payload.userID,
+                    body: payload.data
+                } } }
+            ).catch(err=> {
+                console.error(err)
+                throw new Error()
+            });
             break;
       }
     });

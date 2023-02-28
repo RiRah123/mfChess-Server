@@ -1,5 +1,6 @@
 import { WebSocket } from 'ws';
-import { WSInfo } from '../webSocketServer';
+import { RoomModel } from '../models/Room';
+import { RoomMapType, WSInfo } from '../webSocketServer';
 
 const roomIDLength = 6;
 
@@ -11,14 +12,37 @@ const roomIDLength = 6;
  * @param rooms 
  * @param wsInfo 
  */
-export const pairGameRoom = async (queue: WebSocket[], rooms: Map<string, WebSocket[]>, wsInfo: Map<WebSocket, WSInfo>) => {
+export const pairGameRoom = async (queue: WebSocket[], rooms: Map<string, RoomMapType>, wsInfo: Map<WebSocket, WSInfo>) => {
     while (queue.length >= 2) {
         const players = [queue[0], queue[1]];
         queue.splice(0, 2);
+
+        // ? Not really sure if this is needed, it is just a neater ID, probably for users to type in to join room?
         const newRoomID = createNewRoomID(rooms)
-        rooms.set(newRoomID, players)
+        
+        /**
+         * * Don't confuse the server side "rooms" and the db side "room", server side is for quick access to
+         * * websockets, while db side is for saving all messages and game moves in database.
+         */
 
         if (!wsInfo.has(players[0]) || !wsInfo.has(players[1])) throw new Error("Can't find player");
+        const room = new RoomModel({
+            roomID: newRoomID,
+            users: players.map((ws) => {
+                return wsInfo.get(ws)!.user
+            }),
+            messages:[],
+            game: ""
+        })
+        try {
+            await room.save().then((res) => {
+                console.log("Room saved:", res.roomID)
+            })
+        } catch (err) {
+            console.log(err)
+            throw new Error("error while saving room")
+        }
+        rooms.set(newRoomID, {players, roomMongoID: room._id})
         players.forEach((ws) => {
             wsInfo.get(ws)!.roomID = newRoomID
             ws.send(JSON.stringify({
@@ -36,7 +60,7 @@ export const pairGameRoom = async (queue: WebSocket[], rooms: Map<string, WebSoc
         leftOver: queue.length
     }
 }
-const createNewRoomID = (rooms: Map<string, WebSocket[]>) => {
+const createNewRoomID = (rooms: Map<string, RoomMapType>) => {
     let roomID = createRandomString(roomIDLength);
 
     // ! Total number of rooms: 2176782336, should avoid having more than 80% of that
