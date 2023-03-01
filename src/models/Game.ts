@@ -25,7 +25,19 @@ const MoveSchema = new Schema<MoveType>({
 });
 
 
+interface GameType {
+    moves: MoveType[],
+    result: string,
+}
+
+const GameSchema = new Schema<GameType>({
+    moves: [MoveSchema],
+    result: {type: String, required: true},
+});
+
+
 const MoveModel = mongoose.model<MoveType>('Message', MoveSchema)
+const GameModel = mongoose.model<GameType>('Message', GameSchema)
 
 
-export {MoveType}
+export {MoveType, MoveModel, GameModel}
