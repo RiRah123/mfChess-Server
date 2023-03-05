@@ -50,7 +50,7 @@ const wsInfo = new Map<WebSocket, WSInfo>();
 const onConnection = (ws: WebSocket) => {
     wsInfo.set(ws, defaultWSInfo())
     ws.send(authRequestToken)
-  
+
     console.log("Connection Made")
     ws.on('error', console.error);
   
@@ -58,9 +58,30 @@ const onConnection = (ws: WebSocket) => {
       //* Destructure message and check if ws is in wsInfo
       const {type, payload} = JSON.parse(byteString.toString());
       if (!wsInfo.has(ws) || wsInfo.get(ws) == undefined) throw new Error("WebSocket Info is None");
-  
+      if (type === "chat" || type === "game") {
+        if (!wsInfo.get(ws)?.verified) {
+          ws.send(authRequestToken)
+          return
+        } else if (wsInfo.get(ws)?.roomID === "") {
+          console.error("Using chat while not paired")
+
+          // ? This is duplicate code
+          if (!queue.includes(ws)) queue.push(ws);
+          ws.send(JSON.stringify({
+            type: "status",
+            payload: {
+              name: "status update",
+              userID: "",
+              data: "in queue",
+            }
+          }))
+          pairGameRoom(queue, rooms, wsInfo)
+          return
+        }
+      }
       switch (type) {
         case "upgrade status":
+          console.log(type, payload)
           if (payload.name == "authentication") {
             //* Repeated authentication request
             if (wsInfo.get(ws)!.verified) {
@@ -166,25 +187,6 @@ const onConnection = (ws: WebSocket) => {
   
           }
         case "chat":
-            if (!wsInfo.get(ws)?.verified) {
-              ws.send(authRequestToken)
-              break;
-            } else if (wsInfo.get(ws)?.roomID === "") {
-              console.error("Using chat while not paired")
-  
-              // ? This is duplicate code
-              if (!queue.includes(ws)) queue.push(ws);
-              ws.send(JSON.stringify({
-                type: "status",
-                payload: {
-                  name: "status update",
-                  userID: "",
-                  data: "in queue",
-                }
-              }))
-              pairGameRoom(queue, rooms, wsInfo)
-              break;
-            }
             // ! fix the uncertainties in here (wsInfo.get(ws)?.roomID!)
             const room = rooms.get(wsInfo.get(ws)?.roomID!);
             room?.players.forEach((ws) => {
@@ -201,7 +203,16 @@ const onConnection = (ws: WebSocket) => {
                 console.error(err)
                 throw new Error()
             });
-            break;
+          break;
+        case "game":
+          console.log(type, payload)
+          if (payload.name === "move") {
+            const room = rooms.get(wsInfo.get(ws)?.roomID!);
+            room?.players.forEach((ws) => {
+              ws.send(byteString.toString())
+            })
+          }
+        
       }
     });
 }

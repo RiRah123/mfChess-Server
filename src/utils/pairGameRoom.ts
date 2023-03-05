@@ -48,12 +48,19 @@ export const pairGameRoom = async (queue: WebSocket[], rooms: Map<string, RoomMa
             ws.send(JSON.stringify({
                 type: "status",
                 payload: {
-                name: "status update",
-                userID: "",
-                data: "paired",
+                    name: "status update",
+                    userID: "",
+                    data: "paired",
                 }
             }))
         })
+        
+        // * Sending out start game messages to assign color
+        // ! Randomly deciding color
+        const whitePlayerIndex = Math.floor(Math.random() * 2)
+        sendStartGame(players[whitePlayerIndex], "w")
+        sendStartGame(players[1-whitePlayerIndex], "b")
+
         console.log(`Paired:", [${wsInfo.get(players[0])!.name}] and [${wsInfo.get(players[1])!.name}]`)
     }
     return {
@@ -78,3 +85,14 @@ const createRandomString = (length: number) => {
     }
     return result;
 }
+
+const sendStartGame = (ws: WebSocket, color: string) => {
+    ws.send(JSON.stringify({
+        type: "game",
+        payload: {
+            name: "start game",
+            userID: "",
+            data: color,
+        }
+    }))
+}   
