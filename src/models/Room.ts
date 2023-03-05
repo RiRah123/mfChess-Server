@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 import { Schema, Types } from "mongoose";
+import { GameSchema, GameType } from "./Game";
 
 interface MessageType {
     sender: string;
@@ -18,7 +19,7 @@ export interface RoomType {
     roomID: string,
     users: Types.ObjectId[],
     messages: MessageType[],
-    game: string,
+    game: GameType,
 }
 
 const RoomSchema = new Schema<RoomType>({
@@ -29,13 +30,13 @@ const RoomSchema = new Schema<RoomType>({
     users: [{type: Schema.Types.ObjectId, ref: "Users"}],
     messages: [MessageSchema],
     game: {
-        type: String,
+        type: GameSchema,
         required: false,
     }
 });
 
-const MessageModel = mongoose.model<MessageType>('Message', MessageSchema)
+// const MessageModel = mongoose.model<MessageType>('Message', MessageSchema)
 const RoomModel = mongoose.model<RoomType>('Room', RoomSchema)
 
 
-export {MessageModel, RoomModel}
+export {RoomModel}

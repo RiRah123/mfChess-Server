@@ -30,14 +30,15 @@ interface GameType {
     result: string,
 }
 
+
 const GameSchema = new Schema<GameType>({
     moves: [MoveSchema],
-    result: {type: String, required: true},
+    result: {type: String, required: true}, // * {"onGoing", "tie", "W", "B"}
 });
 
 
-const MoveModel = mongoose.model<MoveType>('Message', MoveSchema)
-const GameModel = mongoose.model<GameType>('Message', GameSchema)
+// const MoveModel = mongoose.model<MoveType>('Move', MoveSchema)
+// const GameModel = mongoose.model<GameType>('Game', GameSchema)
 
 
-export {MoveType, MoveModel, GameModel}
+export {MoveType, GameType, GameSchema}

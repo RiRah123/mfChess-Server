@@ -1,4 +1,5 @@
 import { WebSocket } from 'ws';
+import { GameType } from '../models/Game';
 import { RoomModel } from '../models/Room';
 import { RoomMapType, WSInfo } from '../webSocketServer';
 
@@ -26,13 +27,17 @@ export const pairGameRoom = async (queue: WebSocket[], rooms: Map<string, RoomMa
          */
 
         if (!wsInfo.has(players[0]) || !wsInfo.has(players[1])) throw new Error("Can't find player");
+        const game: GameType = {
+            moves: [],
+            result: "onGoing"
+        }
         const room = new RoomModel({
             roomID: newRoomID,
             users: players.map((ws) => {
                 return wsInfo.get(ws)!.user
             }),
             messages:[],
-            game: ""
+            game: game
         })
         try {
             await room.save().then((res) => {

@@ -2,6 +2,7 @@ import { WebSocket } from 'ws';
 import jwt, { JwtPayload }  from "jsonwebtoken";
 import { pairGameRoom } from './utils/pairGameRoom';
 import { UserModel, UserType } from './models/Users';
+import { MoveType }  from './models/Game';
 import { Document, Types } from 'mongoose';
 import { RoomModel, RoomType } from './models/Room';
 
@@ -227,17 +228,34 @@ const onConnection = (ws: WebSocket) => {
         case "game":
           if (payload.name === "move") {
             const room = rooms.get(wsInfo.get(ws)?.roomID!);
+            const move: MoveType = JSON.parse(payload.data);
+            // console.log("Move:", move)
             room?.players.forEach((ws) => {
               ws.send(byteString.toString())
             })
+            RoomModel.updateOne(
+              { _id: room?.roomMongoID }, 
+              { $push: { "game.moves": move } }
+            ).catch(err=> {
+                console.error(err)
+                throw new Error()
+            });
           }
         
       }
       // console.log("----------")
+      // console.log("WSINFO")
       // wsInfo.forEach((value, key) => {
       //   console.log(value.name)
       // }) 
+      // console.log("Queue")
+      // console.log("Length:", queue.length)
+      // console.log("Rooms")
+      // rooms.forEach((value, key) => {
+      //   console.log(key, value)
+      // }) 
       // console.log("----------")
+
     });
 }
 export default onConnection
