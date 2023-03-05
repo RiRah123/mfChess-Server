@@ -81,7 +81,6 @@ const onConnection = (ws: WebSocket) => {
       }
       switch (type) {
         case "upgrade status":
-          console.log(type, payload)
           if (payload.name == "authentication") {
             //* Repeated authentication request
             if (wsInfo.get(ws)!.verified) {
@@ -97,29 +96,49 @@ const onConnection = (ws: WebSocket) => {
               break;
             }
             
-            let isDuplicateUser = false;
+            let duplicateUser = null;
             //* Verify jwtCredential to check that client is real
             try {
               const decoded = jwt.decode(payload.data) as JwtPayload;
               if (decoded != null) {
   
                 // * Check for duplicate users using different ws
+                // ! Bugs when interrupt ongoing game with duplicate login
                 wsInfo.forEach((value, key) => {
-                  if (value.user && value.user.userID === decoded.sub!) {
-                    isDuplicateUser = true;
+                  if (value.user && value.user.userID === decoded.sub! && key !== ws) {
+                    key.send(JSON.stringify({
+                      type: "status",
+                      payload: {
+                        name: "status update",
+                        userID: "",
+                        data: "duplicate user",
+                      }
+                    }))
+                    key.close();
+                    duplicateUser = wsInfo.get(key)
+                    // wsInfo.set(key, defaultWSInfo());
+                    wsInfo.delete(key);
+                    
+                    // * Remove from queue
+                    // TODO clean up
+                    const idx = queue.indexOf(key);
+                    if (idx > -1) { // only splice array when item is found
+                      queue.splice(idx, 1); // 2nd parameter means remove one item only
+                    }
                   }
                 }) 
-                if (!isDuplicateUser) {
-                    const result: UserType | null = await UserModel.findOne({userID:decoded.sub});
-                    if (!result) throw new Error("Cannot find user.")
-                    wsInfo.set(ws, {
-                        verified: true,
-                        user: result,
-                        roomID: "",
-                        name: decoded.name,
-                    })
+                // ! to fix
+                if (!duplicateUser) {
+                  const result: UserType | null = await UserModel.findOne({userID:decoded.sub});
+                  if (!result) throw new Error("Cannot find user.")
+                  wsInfo.set(ws, {
+                      verified: true,
+                      user: result,
+                      roomID: "",
+                      name: decoded.name,
+                  })
                 } else {
-                  console.log("Duplicate User!")
+                  wsInfo.set(ws, duplicateUser)
                 }
               }
             } catch (error) {
@@ -139,7 +158,7 @@ const onConnection = (ws: WebSocket) => {
               }))
   
             // ! had weird bug that this keeps firing but can't reproduce
-            } else if (isDuplicateUser) {
+            } else {
               ws.send(JSON.stringify({
                 type: "status",
                 payload: {
@@ -148,17 +167,18 @@ const onConnection = (ws: WebSocket) => {
                   data: "duplicate user",
                 }
               }))
-            } else {
-              console.log("Authentication Failed")
-              ws.send(JSON.stringify({
-                type: "status",
-                payload: {
-                  name: "status update",
-                  userID: "",
-                  data: "connected",
-                }
-              }))
             }
+            // else {
+            //   console.log("Authentication Failed")
+            //   ws.send(JSON.stringify({
+            //     type: "status",
+            //     payload: {
+            //       name: "status update",
+            //       userID: "",
+            //       data: "connected",
+            //     }
+            //   }))
+            // }
             break;
   
           } else if (payload.name == "joinRoom") {
@@ -205,7 +225,6 @@ const onConnection = (ws: WebSocket) => {
             });
           break;
         case "game":
-          console.log(type, payload)
           if (payload.name === "move") {
             const room = rooms.get(wsInfo.get(ws)?.roomID!);
             room?.players.forEach((ws) => {
@@ -214,6 +233,11 @@ const onConnection = (ws: WebSocket) => {
           }
         
       }
+      // console.log("----------")
+      // wsInfo.forEach((value, key) => {
+      //   console.log(value.name)
+      // }) 
+      // console.log("----------")
     });
 }
 export default onConnection
