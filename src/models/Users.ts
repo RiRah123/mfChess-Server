@@ -31,6 +31,9 @@ const UserSchema = new mongoose.Schema<UserType>({
         type: String,
         required: true
     },
+    // pastRooms: {
+
+    // }
 });
 
 const UserModel = mongoose.model<UserType>("Users", UserSchema);

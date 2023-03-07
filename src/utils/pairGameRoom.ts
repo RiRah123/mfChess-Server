@@ -1,7 +1,8 @@
 import { WebSocket } from 'ws';
 import { GameType } from '../models/Game';
 import { RoomModel } from '../models/Room';
-import { RoomMapType, WSInfo } from '../webSocketServer';
+import { UserType } from '../models/Users';
+import { RoomMapType, ServerUserType, WSInfo } from '../webSocketServer';
 
 const roomIDLength = 6;
 
@@ -13,9 +14,10 @@ const roomIDLength = 6;
  * @param rooms 
  * @param wsInfo 
  */
-export const pairGameRoom = async (queue: WebSocket[], rooms: Map<string, RoomMapType>, wsInfo: Map<WebSocket, WSInfo>) => {
+export const pairGameRoom = async (queue: string[], rooms: Map<string, RoomMapType>, 
+                wsInfo: Map<WebSocket, WSInfo>, userToWS: Map<string, WebSocket>, userInfo: Map<string, ServerUserType>) => {
     while (queue.length >= 2) {
-        const players = [queue[0], queue[1]];
+        const players: string[] = [queue[0], queue[1]]; // userID
         queue.splice(0, 2);
 
         // ? Not really sure if this is needed, it is just a neater ID, probably for users to type in to join room?
@@ -26,15 +28,17 @@ export const pairGameRoom = async (queue: WebSocket[], rooms: Map<string, RoomMa
          * * websockets, while db side is for saving all messages and game moves in database.
          */
 
-        if (!wsInfo.has(players[0]) || !wsInfo.has(players[1])) throw new Error("Can't find player");
+        // ! Perform checks, ex: whether there is still a ws for a user
+        // if (!wsInfo.has(players[0]) || !wsInfo.has(players[1])) throw new Error("Can't find player");
+
         const game: GameType = {
             moves: [],
             result: "onGoing"
         }
         const room = new RoomModel({
             roomID: newRoomID,
-            users: players.map((ws) => {
-                return wsInfo.get(ws)!.user
+            users: players.map((userID) => {
+                return userInfo.get(userID)!.user
             }),
             messages:[],
             game: game
@@ -48,8 +52,9 @@ export const pairGameRoom = async (queue: WebSocket[], rooms: Map<string, RoomMa
             throw new Error("error while saving room")
         }
         rooms.set(newRoomID, {players, roomMongoID: room._id})
-        players.forEach((ws) => {
-            wsInfo.get(ws)!.roomID = newRoomID
+        players.forEach((userID) => {
+            const ws: WebSocket = userToWS.get(userID)!
+            userInfo.get(userID)!.roomID = newRoomID
             ws.send(JSON.stringify({
                 type: "status",
                 payload: {
@@ -63,10 +68,12 @@ export const pairGameRoom = async (queue: WebSocket[], rooms: Map<string, RoomMa
         // * Sending out start game messages to assign color
         // ! Randomly deciding color
         const whitePlayerIndex = Math.floor(Math.random() * 2)
-        sendStartGame(players[whitePlayerIndex], "w")
-        sendStartGame(players[1-whitePlayerIndex], "b")
+        const playerUserID1 = players[whitePlayerIndex]
+        const playerUserID2 = players[1-whitePlayerIndex]
+        sendStartGame(playerUserID1, playerUserID2, "w", userToWS, userInfo)
+        sendStartGame(playerUserID2, playerUserID1, "b", userToWS, userInfo)
 
-        console.log(`Paired:", [${wsInfo.get(players[0])!.name}] and [${wsInfo.get(players[1])!.name}]`)
+        console.log(`Paired:", [${userInfo.get(players[0])!.name}] and [${userInfo.get(players[1])!.name}]`)
     }
     return {
         leftOver: queue.length
@@ -91,12 +98,15 @@ const createRandomString = (length: number) => {
     return result;
 }
 
-const sendStartGame = (ws: WebSocket, color: string) => {
+const sendStartGame = (playerUserID: string, opponentUserID: string, color: string, 
+                userToWS: Map<string, WebSocket>, userInfo: Map<string, ServerUserType>) => {
+    const ws: WebSocket = userToWS.get(playerUserID)!
+    const opponentInfo: ServerUserType = userInfo.get(opponentUserID)!
     ws.send(JSON.stringify({
         type: "game",
         payload: {
             name: "start game",
-            userID: "",
+            userID: opponentInfo,
             data: color,
         }
     }))

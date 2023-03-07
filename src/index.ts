@@ -37,3 +37,6 @@ app.listen(process.env.PORT, () => {
 const wss = new WebSocket.Server({ port: 4000 });
 
 wss.on('connection', onConnection);
+setInterval(() => {
+  console.log("Client num:", wss.clients.size)
+}, 6000);
