@@ -28,13 +28,15 @@ app.get("/", (req: Request, res: Response) => {
     res.status(200).send("Root")
 });
 
+const PORT = process.env.port ? process.env.port : "443";
+
 //* start server
-app.listen(process.env.PORT, () => {
-  console.log(`listening ${process.env.PORT}`);
+app.listen(PORT, () => {
+  console.log(`listening ${PORT}`);
 });
 
 
-const wss = new WebSocket.Server({ port: 8000 });
+const wss = new WebSocket.Server({ port: parseInt(PORT) });
 
 wss.on('connection', onConnection);
 setInterval(() => {
