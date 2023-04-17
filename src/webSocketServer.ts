@@ -79,6 +79,7 @@ const onConnection = (ws: WebSocket) => {
   ws.on('message', async (byteString) => {
     //* Destructure message and check if ws is in wsInfo
     const {type, payload} = JSON.parse(byteString.toString());
+    console.log("WS: ", type, payload);
     if (!wsInfo.has(ws) || wsInfo.get(ws) == undefined) throw new Error("WebSocket Info is None");
     
 
