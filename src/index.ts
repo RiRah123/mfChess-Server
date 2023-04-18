@@ -28,11 +28,13 @@ app.get("/", (req: Request, res: Response) => {
     res.status(200).send("Root")
 });
 
-//* start server
-app.listen(process.env.PORT, () => {
-  console.log(`listening ${process.env.PORT}`);
-});
+const PORT_HTTP = process.env.port ? process.env.port : "3000";
+const PORT_WS = "3001";
 
+// start HTTP server
+app.listen(PORT_HTTP, () => {
+  console.log(`listening on port ${PORT_HTTP}`);
+});
 
 const wss = new WebSocket.Server({ 
   host: '0.0.0.0',
