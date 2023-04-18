@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { Schema, Types } from "mongoose";
 import { GameSchema, GameType } from "./Game";
 
-interface MessageType {
+export interface MessageType {
     sender: string;
     userID: string;
     body: string,

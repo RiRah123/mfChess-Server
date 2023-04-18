@@ -4,7 +4,7 @@ import { pairGameRoom } from './utils/pairGameRoom';
 import { UserModel, UserType } from './models/Users';
 import { MoveType }  from './models/Game';
 import { Document, Types } from 'mongoose';
-import { RoomModel, RoomType } from './models/Room';
+import { RoomModel, RoomType, MessageType } from './models/Room';
 
 export interface WSInfo {
   verified: boolean;
@@ -33,7 +33,8 @@ const authRequestToken = JSON.stringify({
 
 export interface RoomMapType {
     players: string[], //userID
-    roomMongoID: Types.ObjectId
+    roomMongoID: Types.ObjectId,
+    whitePlayerIndex: number
 }
 
 export interface ServerUserType {
@@ -86,7 +87,9 @@ const onConnection = (ws: WebSocket) => {
     if (type === "chat" || type === "game") {
       const userID = wsInfo.get(ws)?.userID
       if (userID ==undefined || userToWS.get(userID) !== ws) {
-        console.log("Obsolete WS, aborting")
+
+        console.log("Obsolete WS, aborting", userID)
+        if (userID) console.log("PPOOO", userToWS.get(userID), ws)
         return
       }
 
@@ -238,6 +241,28 @@ const onConnection = (ws: WebSocket) => {
                 data: "paired",
               }
             }))
+            const roomID = userInfo.get(userID)?.roomID;
+            const room = rooms.get(roomID!)!
+            const whitePlayerIndex = room.whitePlayerIndex;
+            const opponentIndex = room.players[0] == userID ? 1 : 0;
+
+            const mongoRoom: RoomType | null = await RoomModel.findById(room.roomMongoID);
+            const mongoMove: MoveType[] = mongoRoom!.game.moves;
+
+            const mongoMessages: MessageType[] = mongoRoom!.messages;
+            // console.log("MESSAGESSS:", mongoMessages)
+            const opponentInfo: ServerUserType = userInfo.get(room.players[opponentIndex])!
+            ws.send(JSON.stringify({
+              type: "game",
+              payload: {
+                  name: "resume game",
+                  userID: opponentInfo,   // * not an userID but actually UserType
+                  data: whitePlayerIndex == opponentIndex ? "b" : "w",
+                  fen: mongoMove[mongoMove.length - 1].fen,
+                  messages: mongoMessages,
+
+              }
+          }))
           } else if (!wsInfo.get(ws)?.userID || !userInfo.has(wsInfo.get(ws)?.userID!)){
             throw new Error("ws that doesn't have authentication tries to pair")
           } else {
@@ -303,7 +328,7 @@ setInterval(() => {
   console.log("----------")
   console.log("[WSINFO]", wsInfo.size)
   wsInfo.forEach((value, key) => {
-    console.log(value.userID, userInfo.get(value.userID)?.name)
+    console.log(value.userID,",",userInfo.get(value.userID)?.name)
   }) 
   console.log("[Queue]")
   console.log("Length:", queue.length)
