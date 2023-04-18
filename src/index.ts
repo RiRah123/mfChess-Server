@@ -36,8 +36,10 @@ app.listen(PORT_HTTP, () => {
   console.log(`listening on port ${PORT_HTTP}`);
 });
 
-// start WebSocket server
-const wss = new WebSocket.Server({ port: parseInt(PORT_WS) });
+const wss = new WebSocket.Server({ 
+  host: '0.0.0.0',
+  port: 4000 
+});
 
 wss.on('connection', onConnection);
 setInterval(() => {
