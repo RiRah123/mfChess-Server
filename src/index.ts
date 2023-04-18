@@ -34,7 +34,10 @@ app.listen(process.env.PORT, () => {
 });
 
 
-const wss = new WebSocket.Server({ port: 4000 });
+const wss = new WebSocket.Server({ 
+  host: '0.0.0.0',
+  port: 4000 
+});
 
 wss.on('connection', onConnection);
 setInterval(() => {
