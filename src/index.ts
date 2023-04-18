@@ -31,10 +31,8 @@ app.get("/", (req: Request, res: Response) => {
     res.status(200).send("Root")
 });
 
-//* start server
-app.listen(process.env.PORT, () => {
-  console.log(`listening ${process.env.PORT}`);
-});
+const PORT_HTTP = process.env.port ? process.env.port : "3000";
+const PORT_WS = "3001";
 
 const options = {
   cert: fs.readFileSync('./cert.pem'),
@@ -47,6 +45,10 @@ const wss = new WebSocket.Server({ server });
 //   host: '0.0.0.0',
 //   port: 4000 
 // });
+// start HTTP server
+app.listen(PORT_HTTP, () => {
+  console.log(`listening on port ${PORT_HTTP}`);
+});
 
 wss.on('connection', onConnection);
 setInterval(() => {

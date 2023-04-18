@@ -46,8 +46,6 @@ export interface ServerUserType {
     user: UserType
 }
 
-// const wss = new WebSocket.Server({ port: 4000 });
-
 // TODO Migrate to a better data structure for queue
 const queue: string[] = [] // userID
 
