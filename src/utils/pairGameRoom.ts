@@ -51,7 +51,11 @@ export const pairGameRoom = async (queue: string[], rooms: Map<string, RoomMapTy
             console.log(err)
             throw new Error("error while saving room")
         }
-        rooms.set(newRoomID, {players, roomMongoID: room._id})
+
+        // ! Randomly deciding color
+        const whitePlayerIndex = Math.floor(Math.random() * 2)
+
+        rooms.set(newRoomID, {players, roomMongoID: room._id, whitePlayerIndex})
         players.forEach((userID) => {
             const ws: WebSocket = userToWS.get(userID)!
             userInfo.get(userID)!.roomID = newRoomID
@@ -66,8 +70,6 @@ export const pairGameRoom = async (queue: string[], rooms: Map<string, RoomMapTy
         })
         
         // * Sending out start game messages to assign color
-        // ! Randomly deciding color
-        const whitePlayerIndex = Math.floor(Math.random() * 2)
         const playerUserID1 = players[whitePlayerIndex]
         const playerUserID2 = players[1-whitePlayerIndex]
         sendStartGame(playerUserID1, playerUserID2, "w", userToWS, userInfo)
