@@ -245,6 +245,7 @@ const onConnection = (ws: WebSocket) => {
             const room = rooms.get(roomID!)!
             const whitePlayerIndex = room.whitePlayerIndex;
             const opponentIndex = room.players[0] == userID ? 1 : 0;
+            // console.log("OPPOE", room.players, userID, opponentIndex)
 
             const mongoRoom: RoomType | null = await RoomModel.findById(room.roomMongoID);
             const mongoMove: MoveType[] = mongoRoom!.game.moves;
