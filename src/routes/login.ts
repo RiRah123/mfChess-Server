@@ -10,7 +10,7 @@ let router = express.Router();
 router.post("/", (req: Request, res: Response) => {
     const token = req.body.token;
     const decoded = jwt.decode(token);
-    //console.log(decoded);
+    console.log(decoded);
 
     //* Check if user is in DB, if not then create new.
     UserModel.find({userID:decoded.sub}, async (err: Error, result: Array<typeof UserModel>) => { 
