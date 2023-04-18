@@ -6,6 +6,9 @@ import morgan from 'morgan';
 import login from "./routes/login"
 import { WebSocket } from 'ws';
 
+const https = require('https');
+const fs = require('fs');
+
 
 const app: Express = express();
 
@@ -33,11 +36,17 @@ app.listen(process.env.PORT, () => {
   console.log(`listening ${process.env.PORT}`);
 });
 
+const options = {
+  cert: fs.readFileSync('/path/to/cert.pem'),
+  key: fs.readFileSync('/path/to/key.pem')
+};
 
-const wss = new WebSocket.Server({ 
-  host: '0.0.0.0',
-  port: 4000 
-});
+const server = https.createServer(options);
+const wss = new WebSocket.Server({ server });
+// const wss = new WebSocket.Server({ 
+//   host: '0.0.0.0',
+//   port: 4000 
+// });
 
 wss.on('connection', onConnection);
 setInterval(() => {
