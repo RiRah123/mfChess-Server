@@ -5,7 +5,7 @@
 [![Google_Authentication](https://img.shields.io/badge/Google_Authentication-4285F4?style=for-the-badge&logo=google&logoColor=white)]()
 [![Yarn](https://img.shields.io/badge/Yarn-2C8EBB?style=for-the-badge&logo=Yarn&logoColor=white)]()
 
-## ♟️ What is the mfChess?
+## ♟️ What is mfChess?
 
 <p align="center">
   <img src="mfChess-front-page.png" height="200" width="400" alt="mfChess Front Page">
