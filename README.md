@@ -25,7 +25,7 @@ For enhanced analysis capabilities, the backend stores each player's moves, allo
 
 To ensure a seamless experience across sessions, local storage is utilized to save the state of each player's chess pieces. This feature guarantees that players can easily resume their games even after resigning or reloading the page.
 
-mfChess is currently live at <a href="mfchess.com">mfchess.com</a>, offering a seamless and captivating online chess experience. Developers can explore the frontend codebase, contribute to its growth, and collaborate with the frontend repository found at https://github.com/RiRah123/mfChess-Web-Client, where the frontend client handles the immersive user interface, gameplay interactions, and seamless integration with the backend. Together, these repositories power the live mfChess platform, offering chess enthusiasts a captivating online chess experience like no other.
+mfChess is currently live at <a href="mfchess.com">mfchess.com</a>, offering a seamless and captivating online chess experience. Developers can explore the frontend codebase, contribute to its growth, and collaborate with the frontend repository found at <a href="https://github.com/RiRah123/mfChess-Web-Client">`mfChess-Web-Client`</a> repo, where the frontend client handles the immersive user interface, gameplay interactions, and seamless integration with the backend. Together, these repositories power the live mfChess platform, offering chess enthusiasts a captivating online chess experience like no other.
 
 ## 🏃‍♂️ Running mfChess Backend Locally
 
