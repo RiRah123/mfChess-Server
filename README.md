@@ -15,6 +15,18 @@
   <img src="mfChess-board-page.png" height="350" width="700" alt="mfChess Board Page">
 </p>
 
+Introducing the mfChess backend repository, a crucial component responsible for handling server-client interactions and powering the seamless experience of the mfChess platform. Designed with efficiency and scalability in mind, the backend seamlessly integrates with the frontend to provide an exceptional online chess experience.
+
+At its core, the backend utilizes a MongoDB database server to securely store user information. This ensures that player profiles, game history, and customizable preferences are reliably persisted.
+
+To facilitate real-time gameplay, the backend employs web-socketing technology, enabling two users to connect with each other on the same chess board hosted on the mfChess website. Through this robust connection, players can seamlessly communicate their moves, enabling synchronized gameplay experiences.
+
+For enhanced analysis capabilities, the backend stores each player's moves, allowing for in-depth analysis powered by Stockfish. This integration empowers players to review their strategic decisions and gain valuable insights into their gameplay.
+
+To ensure a seamless experience across sessions, local storage is utilized to save the state of each player's chess pieces. This feature guarantees that players can easily resume their games even after resigning or reloading the page.
+
+mfChess is currently live at mfchess.com, offering a seamless and captivating online chess experience. Developers can explore the frontend codebase, contribute to its growth, and collaborate with the frontend repository found at https://github.com/RiRah123/mfChess-Web-Client, where the frontend client handles the immersive user interface, gameplay interactions, and seamless integration with the backend. Together, these repositories power the live mfChess platform, offering chess enthusiasts a captivating online chess experience like no other.
+
 ## 🏃‍♂️ Running mfChess Backend Locally
 
 Using the terminal:
