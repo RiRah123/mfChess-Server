@@ -50,14 +50,12 @@ Using the terminal:
     ```
     `Note:` You should run the frontend locally at the sametime to ensure the application runs with error. Please check out the frontend repo, <a href="https://github.com/RiRah123/mfChess-Web-Client">`mfChess-Web-Client`</a>, for more details.
 
-## Scripts
+## ➕ What is Next for mfChess Backend?
 
-1. `yarn dev`
-    - Runs the app in the development mode.
-    - Open [http://localhost:3000/graphql](http://localhost:3000/graphql) to view it in the browser.
-2. `yarn test`
-    - Launches the test runner in the interactive watch mode.\
-3. `yarn build`
-    - Builds the app for production to the `bin` folder.\
-4. `yarn start`
-    - Runs app for production.
+Furthermore, the backend aims to extend its web-socketing capabilities to accommodate more than two users connecting to the same chess game. This expansion opens the door to exciting multiplayer features, including the potential for multi-user chess games and tournaments. Imagine the thrill of competing against multiple opponents simultaneously, fostering a dynamic and engaging chess community within the mfChess platform.
+
+In line with these developments, the backend could also facilitate the organization of tournaments, with grand prizes for the winners. This feature would create a competitive environment that motivates players to showcase their skills and fosters a sense of camaraderie and healthy competition among the community. Additionally, the backend could incorporate advanced tournament management functionalities, including pairing algorithms, time controls, and leaderboard tracking.
+
+As the mfChess backend repository continues to evolve, these future steps hold the promise of enriching the user experience, promoting inclusivity, and fostering a vibrant and engaging chess community. With a focus on seamless integration, enhanced web-socketing capabilities, and innovative features, the backend aims to solidify mfChess as the go-to platform for chess enthusiasts seeking a dynamic and immersive online chess experience.
+
+
