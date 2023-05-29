@@ -58,4 +58,9 @@ In line with these developments, the backend could also facilitate the organizat
 
 As the mfChess backend repository continues to evolve, these future steps hold the promise of enriching the user experience, promoting inclusivity, and fostering a vibrant and engaging chess community. With a focus on seamless integration, enhanced web-socketing capabilities, and innovative features, the backend aims to solidify mfChess as the go-to platform for chess enthusiasts seeking a dynamic and immersive online chess experience.
 
-
+## 🤝 Contacts
+- [Race Williams (Project Manager)](https://github.com/r4c3)
+- [Giovanni Hsu (Project Member)](https://github.com/Giovanni1014)
+- [Aaron Liu (Project Member)](https://github.com/aaronliuo)
+- [Hamza Qadri (Project Member)](https://github.com/qad114)
+- [Rian Rahman (Project Member)](https://github.com/RiRah123)
