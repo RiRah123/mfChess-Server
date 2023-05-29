@@ -1,41 +1,27 @@
 # mfChess Web Backend
 
-## Dependencies
-1. `NodeJS v18.13.0`
-2. [`Better Comments VSCode Extension`](https://marketplace.visualstudio.com/items?itemName=aaron-bond.better-comments)
+## 🏃‍♂️ Running mfChess Backend Locally
 
-## Conventions
-1. Use TypeScript
-2. Keep logic out of /src/app.ts
-3. See Comments tab below
+Using the terminal:
 
-## Comments
-We'll use the Better Comments extension to write comments. Below is an example.
-```
-/**
- * updateUserElo
- * * Important information is highlighted.
- * ! Deprecated method, do not use.
- * ? Should this method be exposed in the public API?
- * TODO: refactor this method.
- * @param userID the logged in user's ID
- * @param gameID the ID of the match the user just played
- */
- const updateUserElo = function (userID: number, gameID: number): void {
-  // ! Old method is deprecated. In process of changing
-  ////let eloChange: number = oldGetEloFromGame(gameID);
-  
-  // * new method uses Glicko-2 rating system
-  // TODO: write tests for elo function
-  let eloChange: number = getEloFromGame(gameID);
-  
-  // * User interface defined in /schemas
-  let userObject: User = getUserObject(userID);
-  userObject.elo += eloChange;
-  
-  // ? Should we console.log the new elo afterwards?
- }
-```
+1. Clone the GitHub Project
+   ```
+   $ git clone https://github.com/RiRah123/mfChess-Server.git
+   ```
+2. Navigate to the cloned project
+   ```
+   $ cd mfChess-Server
+   ```
+3. Install necessary packages using yarn
+   ```
+   $ yarn install
+   ```
+   `Note:` If you do not already have yarn install, please check out the <a href="https://classic.yarnpkg.com/lang/en/docs/install/#windows-stable">yarn documentation website</a> for details on how to.
+ 4. Run using yarn
+    ```
+    $ yarn run
+    ```
+    `Note:` You should run the frontend locally at the sametime to ensure the application runs with error. Please check out the frontend repo, <a href="https://github.com/RiRah123/mfChess-Web-Client">`mfChess-Web-Client`</a>, for more details.
 
 ## Scripts
 
